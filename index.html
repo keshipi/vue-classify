@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue-classify</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
+    <style>
+        #progressBar {
+            background-color: rgb(209, 209, 209);
+            width: 100%;
+            height: 0.5em;
+            border-radius: 5%;
+        }
+
+        .progress {
+            display: block;
+            height: 100%;
+            background-color: #e4c465;
+            animation: progressBar 3s linear;
+            animation-fill-mode: both;
+        }
+
+        @keyframes progressBar {
+            0% {
+                width: 0;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container">
+        <div v-show="isStarted">
+            <div v-if="!isCompleted" id="hoge">
+                <p class="has-text-right">{{ questionIndex + 1 + "/" + info.length }}問</p>
+                <div id="sentences" class="content is-medium">{{ sentences }}</div>
+                <div id="progressBar">
+                    <span id="progress"></span>
+                </div>
+                <p>{{ countdown }}</p>
+                <button @click="next" class="button is-fullwidth">動詞</button>
+                <button @click="next" class="button is-fullwidth">名詞</button>
+                <button @click="next" class="button is-fullwidth">形容詞</button>
+                <button @click="next" class="button is-fullwidth">副詞</button>
+            </div>
+            <div v-else>
+                <p class="has-text-centered">正解は{{ "/" + info.length}}でした。</p>
+            </div>
+        </div>
+        <div v-show="!isStarted" class="buttons is-centered">
+            <button @click="start" class="button is-info">ゲームを始める</button>
+        </div>
+
+    </div>
+    <script>
+        const vm = new Vue({
+            el: "#app",
+            data: {
+                isStarted: false,
+                mark: null,
+                timer: null,
+                countdown: 3,
+                questionIndex: 0,
+                sentences: "A new robot created by a team of Toyota engineers set a Guinness World Record after demonstrating its impressive free-throw shooting skills.\
+\
+Toyota Motor Corporation’s robot, CUE3, completed 2,020 consecutive basketball free throws in a demonstration last May. According to Toyota, the number of CUE3’s shots is in honor of the 2020 Olympic and Paralympic Games that is going to happen in Tokyo.\
+\
+The robot, which stands six feet and ten inches, started as an unofficial project of some Toyota employees. The engineers, who were all new to AI, developed the robot during their free time.\
+\
+The very first CUE robot could only hit shots from the free-throw range, but CUE3 can shoot from different distances, even from the three-point line. To execute perfect shots, the robot uses sensors on its torso to calculate the basket’s distance and angle. It also has motors inside its arms and knees that allow it to repeat the correct shooting movement multiple times.\
+\
+In a separate demonstration meant to test CUE3’s ability to make three-point shots, the robot was able to score 62.5% of the time. This figure beats NBA player Kyle Korver’s single season record of 53.6% and two-time NBA MVP Stephen Curry’s average of 43.6%.\
+\
+Although the AI robot made some record-breaking shots, it still has to learn more skills, such as running, dribbling, and jumping. As Japanese professional basketball player Yudai Baba of the Alvark Tokyo said, human players are still better for now. He said, however, that he was ready to let CUE3 play as a full-fledged player on his team if the robot could master more skills.",
+                info: [{
+                        index: 2,
+                        word: "new"
+                        
+                    },
+                    {
+                        index: 6,
+                        word: "robot"
+                    },
+                    {
+                        index: 12,
+                        word: "created"
+                    },
+                    {
+                        index: 25,
+                        word: "team"
+                    },
+                ],
+                answers: []
+            },
+            mounted: function () {
+                var sentences = document.querySelector("#sentences");
+                this.mark = new Mark(sentences);
+            },
+            computed: {
+                isCompleted: function () {
+                    return this.info.length <= this.questionIndex;
+                }
+            },
+            methods: {
+                start: function () {
+                    this.isStarted = true;
+                    this.setMarker();
+                },
+                next: function () {
+                    this.unsetTimer();
+                    this.questionIndex++;
+                    if (this.isCompleted) {
+                        return;
+                    }
+                    this.checkAnswer();
+                    this.setMarker();
+                },
+                setTimer: function () {
+                    var self = this;
+                    this.countdown = 3;
+                    this.timer = setInterval(function () {
+                        self.countdown--;
+                        if (self.countdown === 0) {
+                            self.next();
+                        }
+                    }, 1000);
+                    var progress = document.querySelector("#progress");
+                    progress.classList.add("progress");
+                    var newOne = progress.cloneNode(true);
+                    progress.parentNode.replaceChild(newOne, progress);
+                },
+                unsetTimer: function () {
+                    clearInterval(this.timer);
+                },
+                setMarker: function () {
+                    this.mark.unmark();
+                    this.mark.markRanges([{
+                        start: this.info[this.questionIndex].index,
+                        length: this.info[this.questionIndex].word.length
+                    }]);
+                    this.setTimer();
+                },
+                checkAnswer: function () {
+                    var audio = new Audio('correct.mp3');
+                    audio.play();
+                }
+            },
+        });
+    </script>
+</body>
+
+</html>
